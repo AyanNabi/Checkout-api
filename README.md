@@ -16,67 +16,6 @@ Students build this service incrementally across lectures, starting from a basic
 go run cmd/server/main.go
 ```
 
-The server starts on http://localhost:8080.
-
-## API Endpoints
-
-### GET /items
-
-Returns all available items.
-
-```bash
-curl http://localhost:8080/items
-```
-
-# Xsolla Pay Station Sandbox
-
-Set the variables in `.env` (or the Helm values/Secret) before using the Buy button:
-
-- `XSOLLA_PROJECT_ID`: Xsolla project ID.
-- `XSOLLA_MERCHANT_ID`: Xsolla merchant ID used as the Basic Auth username.
-- `XSOLLA_API_KEY`: Xsolla API key used as the Basic Auth password.
-- `XSOLLA_WEBHOOK_SECRET`: Xsolla webhook secret key.
-- `XSOLLA_ITEM_SKU`: SKU that exists in the Xsolla Store catalog.
-- `XSOLLA_SANDBOX=true` and `XSOLLA_PAYSTATION_URL=https://sandbox-secure.xsolla.com/paystation4/`.
-
-The backend creates tokens through `POST /v3/project/{project_id}/admin/payment/token` and the browser is redirected to the returned sandbox Pay Station URL. Each item can store its Store SKU in `items.xsolla_sku`; `XSOLLA_ITEM_SKU` is only a compatibility fallback. Configure the Xsolla webhook URL as `https://<public-host>/api/webhook`; local testing requires a public HTTPS tunnel. The webhook signature is `SHA1(raw_body + XSOLLA_WEBHOOK_SECRET)` in the `Authorization: Signature <hash>` header.
-
-After a successful payment webhook, the purchased quantity is added to `GET /api/me/inventory`. The wallet balance remains separate from virtual-item ownership. The same transaction ID can be delivered repeatedly; the database constraint and transaction lock ensure that inventory is granted once.
-
-Run migrations through the existing migration workflow before using payments. Populate `items.xsolla_sku` with the exact SKU from the Xsolla Store catalog. Set the webhook secret in the Publisher Account and copy the credentials into deployment secrets, never into frontend code or committed files.
-
-For a manual sandbox test: log in, click Buy on a catalog item, complete the Pay Station checkout with an Xsolla sandbox card and expiry `12/40`, then verify the balance/transactions endpoint. Re-send the same signed payment webhook and verify the balance changes only once.
-
-### POST /orders
-
-Creates an order with mock payment processing.
-
-```bash
-curl -X POST http://localhost:8080/orders \
-  -H "Content-Type: application/json" \
-  -d '{"user_id": 1, "items": [{"item_id": 1, "quantity": 2}]}'
-```
-
-## Running Tests
-
-```bash
-go test -v ./internal/transport/
-```
-
-## Branch Guide
-
-Each lecture has two branches:
-
-| Branch | Purpose |
-|--------|---------|
-| `week-XX/lecture-XX` | **Starter** — scaffold with TODOs and pre-written tests. Fork from here at the start of class. |
-| `week-XX/lecture-XX-final` | **Final** — completed code matching the lecture. Compare your work against this. |
-
-### Available Branches
-
-- `week-01/lecture-01` — Intro to HTTP and JSON APIs (starter)
-- `week-01/lecture-01-final` — Intro to HTTP and JSON APIs (completed)
-
 ## Project Structure
 
 ```
@@ -219,19 +158,6 @@ migrate -database "$DATABASE_URL" -path db/migrations up
 ```bash
 migrate -database "$DATABASE_URL" -path db/migrations down 1
 ```
-
-### Check PostgreSQL
-
-```bash
-psql -U postgres -d xsolla_ecommerce
-```
-
-### Seed Data to PostgreSQL
-
-```bash
-psql xsolla_ecommerce < db/seeds/items.sql
-```
-
 ## License
 
 Internal — Xsolla School use only.
