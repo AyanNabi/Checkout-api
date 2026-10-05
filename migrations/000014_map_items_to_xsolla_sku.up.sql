@@ -1,0 +1,10 @@
+UPDATE items SET xsolla_sku = 'golden_ak47_skin_01' WHERE id = 11;
+UPDATE items SET xsolla_sku = 'neon_character_skin_01' WHERE id = 12;
+UPDATE items SET xsolla_sku = 'legendary_lootbox_01' WHERE id = 13;
+UPDATE items SET xsolla_sku = 'game_coins_1000_01' WHERE id = 14;
+UPDATE items SET xsolla_sku = 'phoenix_pet_01' WHERE id = 15;
+UPDATE items SET xsolla_sku = 'magic_wand_01' WHERE id = 16;
+UPDATE items SET xsolla_sku = 'cyber_ninja_outfit_01' WHERE id = 17;
+UPDATE items SET xsolla_sku = 'fire_dragon_skin_01' WHERE id = 18;
+UPDATE items SET xsolla_sku = 'shadow_armor_01' WHERE id = 19;
+UPDATE items SET xsolla_sku = 'dragon_sword_01' WHERE id = 20;

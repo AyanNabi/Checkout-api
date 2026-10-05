@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-api
+  namespace: workshop
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: checkout-api
+  template:
+    metadata:
+      labels:
+        app: checkout-api
+    spec:
+      initContainers:
+        - name: run-migrations
+          image: migrate/migrate:v4.17.0
+          args:
+            - -path=/migrations
+            - -database=postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable
+            - up
+          env:
+            - name: DB_USER
+              value: postgres
+            - name: DB_PASSWORD
+              value: postgres
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              value: checkout
+          volumeMounts:
+            - name: migrations
+              mountPath: /migrations
+      containers:
+        - name: checkout-api
+          image: checkout-api-checkout-api:v3
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "64Mi"
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+          envFrom:
+            - configMapRef:
+                name: checkout-api-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-api-secret
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-api-secret
+                  key: JWT_SECRET
+            - name: XSOLLA_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-api-secret
+                  key: XSOLLA_PROJECT_ID
+            - name: XSOLLA_MERCHANT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-api-secret
+                  key: XSOLLA_MERCHANT_ID
+            - name: XSOLLA_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-api-secret
+                  key: XSOLLA_API_KEY
+            - name: XSOLLA_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-api-secret
+                  key: XSOLLA_WEBHOOK_SECRET
+            - name: XSOLLA_ITEM_SKU
+              valueFrom:
+                secretKeyRef:
+                  name: checkout-api-secret
+                  key: XSOLLA_ITEM_SKU
+      volumes:
+        - name: migrations
+          configMap:
+            name: checkout-migrations
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-api
+  namespace: workshop
+spec:
+  selector:
+    app: checkout-api
+  ports:
+    - port: 8080
+      targetPort: 8080
+  type: NodePort

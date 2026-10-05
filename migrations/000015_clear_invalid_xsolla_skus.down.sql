@@ -1,0 +1,10 @@
+UPDATE items SET xsolla_sku = 'shadow-mouse' WHERE id = 31;
+UPDATE items SET xsolla_sku = 'cyber-keyboard' WHERE id = 32;
+UPDATE items SET xsolla_sku = 'ultravision-4k' WHERE id = 33;
+UPDATE items SET xsolla_sku = 'powerlink-cable' WHERE id = 34;
+UPDATE items SET xsolla_sku = 'phantom-headset' WHERE id = 35;
+UPDATE items SET xsolla_sku = 'battle-mat' WHERE id = 36;
+UPDATE items SET xsolla_sku = 'recon-cam' WHERE id = 37;
+UPDATE items SET xsolla_sku = 'titan-stand' WHERE id = 38;
+UPDATE items SET xsolla_sku = 'nexus-hub' WHERE id = 39;
+UPDATE items SET xsolla_sku = 'titan-frame' WHERE id = 40;

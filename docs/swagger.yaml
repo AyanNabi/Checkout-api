@@ -1,0 +1,923 @@
+basePath: /
+definitions:
+  domain.BalanceResponse:
+    properties:
+      balance:
+        type: integer
+    type: object
+  domain.BalanceTransaction:
+    properties:
+      amount:
+        type: integer
+      balance_after:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      type:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  domain.Cart:
+    properties:
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/domain.LineItem'
+        type: array
+      user_id:
+        type: integer
+    type: object
+  domain.Item:
+    properties:
+      category_id:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      stock:
+        type: integer
+    type: object
+  domain.ItemPage:
+    type: object
+  domain.LineItem:
+    properties:
+      item_id:
+        type: integer
+      name:
+        type: string
+      price:
+        type: integer
+      quantity:
+        type: integer
+      stock:
+        type: integer
+    type: object
+  domain.LineItemRequest:
+    properties:
+      item_id:
+        type: integer
+      quantity:
+        type: integer
+    type: object
+  domain.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  domain.Order:
+    properties:
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/domain.LineItem'
+        type: array
+      status:
+        type: string
+      total:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  domain.SignUpRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  domain.TopUpRequest:
+    properties:
+      amount:
+        type: integer
+    type: object
+  domain.TransactionsResponse:
+    properties:
+      transactions:
+        items:
+          $ref: '#/definitions/domain.BalanceTransaction'
+        type: array
+    type: object
+  domain.UpdateCartItemRequest:
+    properties:
+      quantity:
+        type: integer
+      user_id:
+        type: integer
+    type: object
+  domain.UpdateOrderStatusRequest:
+    properties:
+      status:
+        type: string
+    type: object
+  domain.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+  helper.AppError:
+    properties:
+      code:
+        type: string
+      err: {}
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: API for products, users, carts and orders.
+  title: Checkout API
+  version: "1.0"
+paths:
+  /api/me/balance:
+    get:
+      description: Returns the authenticated user's wallet balance.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.BalanceResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      security:
+      - BearerAuth: []
+      summary: Get current user balance
+      tags:
+      - Balance
+  /api/me/balance/top-up:
+    post:
+      consumes:
+      - application/json
+      description: Adds a mock balance amount to the authenticated user's wallet.
+        This is a mock payment flow and does not represent a real payment provider
+        transaction.
+      parameters:
+      - description: Top-up request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.TopUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.BalanceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      security:
+      - BearerAuth: []
+      summary: Mock top-up for the current user
+      tags:
+      - Balance
+  /api/me/transactions:
+    get:
+      description: Returns the authenticated user's balance transaction history.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.TransactionsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      security:
+      - BearerAuth: []
+      summary: Get balance transaction history
+      tags:
+      - Balance
+  /items:
+    get:
+      description: Get items with pagination and price filtering
+      parameters:
+      - description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Cursor for cursor-based pagination
+        in: query
+        name: cursor
+        type: string
+      - description: Minimum price
+        in: query
+        name: min
+        type: integer
+      - description: Maximum price
+        in: query
+        name: max
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.ItemPage'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Get all items
+      tags:
+      - Items
+  /items/{id}:
+    get:
+      description: Get a single item by its ID
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Item'
+        "400":
+          description: Invalid item ID
+          schema:
+            type: string
+        "404":
+          description: Item not found
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Get item by ID
+      tags:
+      - Items
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user and return an access token.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Login
+      tags:
+      - Authentication
+  /logout:
+    post:
+      description: Log out the current user by deleting the refresh token cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Logout
+      tags:
+      - Authentication
+  /orders/{id}:
+    get:
+      description: Get a single order by its ID
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      security:
+      - BearerAuth: []
+      summary: Get order by ID
+      tags:
+      - Orders
+  /orders/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update the status of an order
+      parameters:
+      - description: Order ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Order status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      security:
+      - BearerAuth: []
+      summary: Update order status
+      tags:
+      - Orders
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user account
+      parameters:
+      - description: Sign up information
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Sign up
+      tags:
+      - Authentication
+  /token:
+    post:
+      description: Generate a new access token using the refresh token stored in an
+        HttpOnly cookie
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Refresh access token
+      tags:
+      - Authentication
+  /user/cart:
+    get:
+      description: Returns the authenticated user's shopping cart
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Cart'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Cart not found
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get user's cart
+      tags:
+      - Cart
+    post:
+      consumes:
+      - application/json
+      description: Adds an item with the specified quantity to the authenticated user's
+        cart
+      parameters:
+      - description: Cart item
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.LineItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Cart'
+        "400":
+          description: Invalid request body or quantity
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Item not found
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "409":
+          description: Insufficient stock
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Add item to cart
+      tags:
+      - Cart
+  /user/cart/items/{id}:
+    delete:
+      description: Removes an item from the authenticated user's cart
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Item removed successfully
+        "400":
+          description: Invalid item ID or path
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Cart or cart item not found
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Remove item from cart
+      tags:
+      - Cart
+    patch:
+      consumes:
+      - application/json
+      description: Updates the quantity of an item in the authenticated user's cart
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated quantity
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/domain.UpdateCartItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.Cart'
+        "400":
+          description: Invalid item ID or request body
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "404":
+          description: Cart or cart item not found
+          schema:
+            type: string
+        "405":
+          description: Method not allowed
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Update cart item quantity
+      tags:
+      - Cart
+  /user/orders:
+    get:
+      description: Get orders for the authenticated user with filter
+      parameters:
+      - default: 10
+        description: Number of orders to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of orders to skip
+        in: query
+        name: offset
+        type: integer
+      - description: ID of the last order from previous page
+        in: query
+        name: cursor
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      security:
+      - BearerAuth: []
+      summary: Get orders for current user
+      tags:
+      - Orders
+  /users:
+    get:
+      description: Get all users with offset-based or cursor-based filter
+      parameters:
+      - default: 10
+        description: Number of users to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of users to skip
+        in: query
+        name: offset
+        type: integer
+      - description: ID of the last user from the previous page
+        in: query
+        name: cursor
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Get all users
+      tags:
+      - Users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      parameters:
+      - description: User information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Create a user
+      tags:
+      - Users
+  /users/{id}:
+    delete:
+      description: Delete a user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Delete user
+      tags:
+      - Users
+    get:
+      description: Get a single user by their ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Get user by ID
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update an existing user's information
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated user information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/domain.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "405":
+          description: Method Not Allowed
+          schema:
+            $ref: '#/definitions/helper.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/helper.AppError'
+      summary: Update user
+      tags:
+      - Users
+swagger: "2.0"

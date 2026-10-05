@@ -1,0 +1,1 @@
+UPDATE items SET xsolla_sku = NULL WHERE id BETWEEN 11 AND 20;

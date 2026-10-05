@@ -1,0 +1,51 @@
+stages:
+  - test
+  - build
+  - docker-build
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+
+unit_tests:
+  stage: test
+  image: golang:1.25
+
+  script:
+    - cd week-2/checkout-api
+    - go mod download
+    - go test -race ./internal/transport/cart
+    - go test -race -coverprofile=coverage.out ./internal/services/...
+    - go tool cover -func=coverage.out | tee coverage.txt
+    - |
+      COVERAGE=$(grep "total:" coverage.txt | awk '{print $3}' | tr -d '%')
+      echo "Total coverage: ${COVERAGE}%"
+      awk "BEGIN {exit !($COVERAGE >= 60)}"
+
+  coverage: '/total:\s+\(statements\)\s+(\d+\.\d+)%/'
+
+  artifacts:
+    when: always
+    paths:
+      - week-2/checkout-api/coverage.out
+      - week-2/checkout-api/coverage.txt
+
+build:
+  stage: build
+  image: golang:1.25-alpine
+
+  script:
+    - cd week-2/checkout-api
+    - go mod download
+    - go build -o server ./cmd/server
+
+docker-build:
+  stage: docker-build
+  image: docker:cli
+
+  services:
+    - docker:dind
+
+  script:
+    - cd week-2/checkout-api
+    - docker build -t checkout-api .

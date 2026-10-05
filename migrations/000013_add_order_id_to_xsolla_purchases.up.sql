@@ -1,0 +1,2 @@
+ALTER TABLE xsolla_purchases ADD COLUMN IF NOT EXISTS order_id INTEGER REFERENCES orders(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_xsolla_purchases_order_id ON xsolla_purchases (order_id);

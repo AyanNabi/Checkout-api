@@ -1,0 +1,62 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: checkout-postgres
+
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-checkout}
+
+    ports:
+      - "${DB_PORT:-5433}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/migrations
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-checkout}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - checkout-network
+
+  checkout-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: checkout-api
+
+    environment:
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-checkout}
+      JWT_SECRET: ${JWT_SECRET:-my-super-secret-key-change-me}
+      PORT: 8080
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - checkout-network
+
+volumes:
+  postgres_data:
+
+networks:
+  checkout-network:
+    driver: bridge

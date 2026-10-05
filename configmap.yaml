@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: checkout-api-config
+  namespace: workshop
+
+data:
+  DB_USER: "postgres"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  DB_NAME: "checkout"
+  PORT: "8080"
+  XSOLLA_SANDBOX: "true"
+  XSOLLA_API_BASE_URL: "https://store.xsolla.com/api"
+  XSOLLA_PAYSTATION_URL: "https://sandbox-secure.xsolla.com/paystation4/"
+  XSOLLA_RETURN_URL: "http://checkout.local/"
+  XSOLLA_PROJECT_ID: "315791"
+#  XSOLLA_MERCHANT_ID: your_merchant_id
+#  XSOLLA_API_KEY: your_api_key
+  XSOLLA_WEBHOOK_SECRET: "ckMTqcSJsMVy_Mx6vMVDx0yNRUcwbVRMJb_IC7udI3Q"

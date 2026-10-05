@@ -1,0 +1,36 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: workshop
+
+resources:
+  - postgres.yaml
+  - configmap.yaml
+  - api.yaml
+  - ingress.yaml
+
+configMapGenerator:
+  - name: checkout-migrations
+    files:
+      - migrations/000001_create_items.down.sql
+      - migrations/000001_create_items.up.sql
+      - migrations/000002_create_orders.down.sql
+      - migrations/000002_create_orders.up.sql
+      - migrations/000003_create_order_items.down.sql
+      - migrations/000003_create_order_items.up.sql
+      - migrations/000004_seed_data.down.sql
+      - migrations/000005_create_users.down.sql
+      - migrations/000005_create_users.up.sql
+      - migrations/000006_create_sessions.down.sql
+      - migrations/000006_create_sessions.up.sql
+      - migrations/000007_add_orders_user_id_status_index.down.sql
+      - migrations/000007_add_orders_user_id_status_index.up.sql
+      - migrations/000008_create_carts.up.sql
+      - migrations/000009_create_user_balances.down.sql
+      - migrations/000009_create_user_balances.up.sql
+      - migrations/000010_create_xsolla_purchases.down.sql
+      - migrations/000010_create_xsolla_purchases.up.sql
+      - migrations/000011_add_xsolla_sku_to_items.down.sql
+      - migrations/000011_add_xsolla_sku_to_items.up.sql
+      - migrations/000012_create_user_inventory.down.sql
+      - migrations/000012_create_user_inventory.up.sql
