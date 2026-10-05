@@ -1,6 +1,6 @@
 # Checkout API
 
-Xsolla School training project — a simplified checkout API built with Go.
+Training project — a simplified checkout API built with Go.
 
 Students build this service incrementally across lectures, starting from a basic HTTP server and evolving it into a production-ready system with persistence, authentication, observability, and more.
 
